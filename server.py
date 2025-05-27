@@ -1,5 +1,12 @@
+"""
+This Flask application serves an emotion detection web interface.
+
+It leverages the EmotionDetection package to analyze text input and display
+the dominant emotion along with individual emotion scores. Includes basic
+error handling for blank text input.
+"""
 from flask import Flask, render_template, request
-from EmotionDetection import emotion_detector # Import the emotion_detector function from your package
+from EmotionDetection import emotion_detector # Import emotion_detector function
 
 # Initialize the Flask application
 app = Flask(__name__)
@@ -16,22 +23,21 @@ def render_index_page():
 def emotion_detector_route():
     """
     Handles requests to the /emotionDetector endpoint.
+
     It takes 'textToAnalyze' as a query parameter,
-    processes it using the emotion_detector, and returns a formatted string response.
+    processes it using the emotion_detector, and returns a formatted
+    string response. Includes error handling for invalid/blank text input.
     """
     # Get the text to analyze from the query parameters
     text_to_analyze = request.args.get('textToAnalyze')
 
-    # Check if text_to_analyze is provided
-    if not text_to_analyze:
-        return "Invalid text provided. Please provide text to analyze.", 400
-
     # Call the emotion_detector function
     response = emotion_detector(text_to_analyze)
 
-    # Check if the emotion_detector returned valid data (not all Nones due to API error)
-    if all(value is None for value in response.values()):
-        return "Error: Could not process emotion for the given text. Please try again later.", 500
+    # If dominant_emotion is None, it indicates an error or invalid input
+    # (e.g., from a blank entry handled by emotion_detector's 400 status code check)
+    if response['dominant_emotion'] is None:
+        return "Invalid text! Please try again!"
 
     # Extract the emotion scores and dominant emotion
     anger = response.get('anger')
@@ -54,4 +60,3 @@ if __name__ == "__main__":
     # Run the Flask application on localhost:5000
     # debug=True allows for automatic reloading on code changes and provides a debugger
     app.run(host="0.0.0.0", port=5000, debug=True)
-
